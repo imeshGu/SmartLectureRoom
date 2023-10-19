@@ -5,18 +5,18 @@ Adafruit_INA219 ina219;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
-  Serial.print("Hello");
+  //Serial.begin(9600);
+  //Serial.print("Hello");
   Serial.begin(115200);
   while (!Serial) {
       // will pause Zero, Leonardo, etc until serial console opens
       delay(1);
   }
-
-  if (! ina219.begin()) {
-    Serial.println("Failed to find INA219 chip");
-    while (1) { delay(10); }
-  }
+  ina219.begin();
+  //if (! ina219.begin()) {
+  //  Serial.println("Failed to find INA219 chip");
+  //  while (3) { delay(10); }
+  //}
 
   Serial.println("Measuring voltage and current with INA219 ...");
 }
