@@ -7,6 +7,15 @@ SoftwareSerial espSerial(2,3);
 Adafruit_INA219 ina219;
 BH1750 GY30;
 
+//variables ..........
+float shuntvoltage = 0;
+float busvoltage = 0;
+float current_mA = 0;
+float loadvoltage = 0;
+float power_mW = 0;
+float luxRoom = 0;
+float luxVideo = 0;
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -19,31 +28,30 @@ void setup() {
   ina219.begin();
   GY30.begin();
 
-  Serial.println("Measuring voltage and current with INA219 ...");
-  Serial.println("Measuring Lux level");
+  // Serial.println("Measuring voltage and current with INA219 ...");
+  // Serial.println("Measuring Lux level");
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   //Serial.println("Hello Worlds");     
 
-  float shuntvoltage = 0;
-  float busvoltage = 0;
-  float current_mA = 0;
-  float loadvoltage = 0;
-  float power_mW = 0;
-  float lux = GY30.readLightLevel();
+  //sensor reading logic........
+
   
-  shuntvoltage = ina219.getShuntVoltage_mV();
-  busvoltage = ina219.getBusVoltage_V();
-  current_mA = ina219.getCurrent_mA();
-  power_mW = ina219.getPower_mW();
-  loadvoltage = busvoltage + (shuntvoltage / 1000);
-  byte dataToSend[12];
-  memcpy(dataToSend, &current_mA, sizeof(current_mA));
-  memcpy(dataToSend + sizeof(current_mA), &loadvoltage,sizeof(loadvoltage));
-  memcpy(dataToSend + sizeof(current_mA) + sizeof(loadvoltage), &power_mW, sizeof(power_mW));
-  memcpy(dataToSend + sizeof(current_mA) + sizeof(loadvoltage) + sizeof(power_mW), &lux, sizeof(lux));
+  // lux = GY30.readLightLevel();
+  
+  // shuntvoltage = ina219.getShuntVoltage_mV();
+  // busvoltage = ina219.getBusVoltage_V();
+  // current_mA = ina219.getCurrent_mA();
+  // power_mW = ina219.getPower_mW();
+  // loadvoltage = busvoltage + (shuntvoltage / 1000);
+  // byte dataToSend[12];
+
+  // memcpy(dataToSend, &current_mA, sizeof(current_mA));
+  // memcpy(dataToSend + sizeof(current_mA), &loadvoltage,sizeof(loadvoltage));
+  // memcpy(dataToSend + sizeof(current_mA) + sizeof(loadvoltage), &power_mW, sizeof(power_mW));
+  // memcpy(dataToSend + sizeof(current_mA) + sizeof(loadvoltage) + sizeof(power_mW), &lux, sizeof(lux));
 
   // Serial.println(shuntvoltage);
   // Serial.println(busvoltage);
@@ -51,9 +59,19 @@ void loop() {
   // Serial.println(power_mW);
   // Serial.println(loadvoltage);
   // Serial.println(lux);
-  
-  //send data 
-  Serial.write(dataToSend,sizeof(dataToSend));
+
+  //send data through serial communication
+  Serial.print(current_mA);
+  Serial.print(",");
+  Serial.print(loadvoltage);
+  Serial.print(",");
+  Serial.print(power_mW);
+  Serial.print(",");
+  Serial.print(luxRoom);
+  Serial.print(",");
+  Serial.print(luxVideo);
+  Serial.println();
+
+  //Serial.write(dataToSend,sizeof(dataToSend));
   delay(3000);
- 
 }
