@@ -1,0 +1,76 @@
+.home-container {
+    max-width: 800px;
+    margin: 150px auto;
+    padding: 40px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    margin-bottom: 25px;
+    text-align: center;
+    color: #333;
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.input-field, .select-field {
+    position: relative;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+    background-color: #f5f5f5;
+    transition: border 0.2s, box-shadow 0.2s;
+    text-align: right;
+}
+
+input:focus, select:focus {
+    border: 1px solid #007bff;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+label {
+    position: absolute;
+    top: 12px;
+    left: 15px;
+    font-weight: 400;
+    color: #888;
+    transition: transform 0.2s, color 0.2s;
+}
+
+input:focus + label, select:focus + label {
+    transform: translateY(-18px) scale(0.8);
+    color: #007bff;
+}
+
+.submit-btn {
+    margin: 20px 0;
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+    background-color: #0056b3;
+}
