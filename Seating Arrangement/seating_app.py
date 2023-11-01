@@ -1,47 +1,27 @@
 from flask import Flask, request, jsonify, make_response
 import pandas as pd
-from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
+import joblib
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app) 
 
-def load_and_preprocess_data():
-    df = pd.read_csv('video_wall_data.csv')
-    le = LabelEncoder()
-    df['seating_type'] = le.fit_transform(df['seating_type'])
-    return df, le
+# Load regression models
+regression_models = joblib.load('regression_models.joblib')
 
-def train_evaluate_regressor(train_data, features, target):
-    X_train = train_data[features]
-    y_train = train_data[target]
+# Load classifier model and label encoder
+classifier_model = joblib.load('classifier_model_and_label_encoder.joblib')
+seating_type_model = classifier_model['seating_type_model']
+le = classifier_model['label_encoder']
 
-    model = DecisionTreeRegressor(random_state=42)
-    model.fit(X_train, y_train)
-
-    return model
-
-def train_evaluate_classifier(train_data, features, target):
-    X_train = train_data[features]
-    y_train = train_data[target]
-
-    model = DecisionTreeClassifier(random_state=42)
-    model.fit(X_train, y_train)
-
-    return model
-
-df, le = load_and_preprocess_data()
-features = ['height_of_video_wall', 'width_of_video_wall', 'room_length', 'room_width', 'room_height', 'number_of_seats']
-targets = ['seating_type', 'distance_from_video_wall', 'seats_per_row', 'number_of_rows', 'seats_per_cluster', 'number_of_clusters']
-
-train_set, _ = train_test_split(df, test_size=0.2, random_state=42)
-for target in targets[1:]:
-    train_set = train_set.dropna(subset=[target])
-
-regression_models = {target: train_evaluate_regressor(train_set, features, target) for target in targets[1:]}
-seating_type_model = train_evaluate_classifier(train_set, features, 'seating_type')
+def adjust_predictions(seats_per_row, number_of_rows, total_seats):
+    # Adjust seats_per_row and number_of_rows to ensure they multiply to total_seats
+    while seats_per_row * number_of_rows != total_seats:
+        if seats_per_row * number_of_rows < total_seats:
+            seats_per_row += 1
+        else:
+            number_of_rows -= 1
+    return seats_per_row, number_of_rows
 
 @app.route('/', methods=['POST'])
 def predict_seating():
@@ -65,24 +45,22 @@ def predict_seating():
         seating_type_prediction = seating_type_model.predict(test_data_df)[0]
         seating_type = le.inverse_transform([seating_type_prediction])[0]
 
+        response = {"seating_type": seating_type}
+
         if seating_type == 'row':
             seats_per_row_prediction = regression_models['seats_per_row'].predict(test_data_df)[0]
             number_of_rows_prediction = regression_models['number_of_rows'].predict(test_data_df)[0]
-            response = {
-                "seating_type": seating_type,
-                "seats_per_row": seats_per_row_prediction,
-                "number_of_rows": number_of_rows_prediction
-            }
+            
+            # Adjust the predictions
+            seats_per_row_prediction, number_of_rows_prediction = adjust_predictions(seats_per_row_prediction, number_of_rows_prediction, test_data['number_of_seats'])
+            
+            response["seats_per_row"] = seats_per_row_prediction
+            response["number_of_rows"] = number_of_rows_prediction
         elif seating_type == 'cluster':
-            seats_per_cluster_prediction = regression_models['seats_per_cluster'].predict(test_data_df)[0]
-            number_of_clusters_prediction = regression_models['number_of_clusters'].predict(test_data_df)[0]
-            response = {
-                "seating_type": seating_type,
-                "seats_per_cluster": seats_per_cluster_prediction,
-                "number_of_clusters": number_of_clusters_prediction
-            }
+            response["seats_per_cluster"] = regression_models['seats_per_cluster'].predict(test_data_df)[0]
+            response["number_of_clusters"] = regression_models['number_of_clusters'].predict(test_data_df)[0]
         else:
-            response = {"seating_type": seating_type, "message": "Seating type not recognized"}
+            response["message"] = "Seating type not recognized"
 
         return jsonify(response)
     except Exception as e:
